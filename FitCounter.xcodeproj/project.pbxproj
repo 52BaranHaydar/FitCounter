@@ -6,8 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		95EF42E82F73CDEF008DD92F /* SwiftData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95EF42E72F73CDEF008DD92F /* SwiftData.framework */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		955CAF702F73BF6F00C1367D /* FitCounter.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitCounter.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		95EF42E72F73CDEF008DD92F /* SwiftData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftData.framework; path = System/Library/Frameworks/SwiftData.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +28,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				95EF42E82F73CDEF008DD92F /* SwiftData.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -33,6 +39,7 @@
 			isa = PBXGroup;
 			children = (
 				955CAF722F73BF6F00C1367D /* FitCounter */,
+				95EF42E62F73CDEF008DD92F /* Frameworks */,
 				955CAF712F73BF6F00C1367D /* Products */,
 			);
 			sourceTree = "<group>";
@@ -43,6 +50,14 @@
 				955CAF702F73BF6F00C1367D /* FitCounter.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		95EF42E62F73CDEF008DD92F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				95EF42E72F73CDEF008DD92F /* SwiftData.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */

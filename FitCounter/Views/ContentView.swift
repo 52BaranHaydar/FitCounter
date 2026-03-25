@@ -5,11 +5,13 @@
 //  Created by Baran on 25.03.2026.
 //
 import SwiftUI
+import SwiftData
 
 struct ContentView: View {
     
     @StateObject private var viewModel = WorkoutViewModel()
     @State private var showExerciseSelection = false
+    @Environment(\.modelContext) private var modelContext
     
     var body: some View {
         GeometryReader { geo in
@@ -37,8 +39,6 @@ struct ContentView: View {
                 VStack {
                     HStack {
                         Spacer()
-                        
-                        // Egzersiz seçim butonu (antrenman aktif değilse)
                         if !viewModel.isWorkoutActive {
                             Button {
                                 showExerciseSelection = true
@@ -56,15 +56,13 @@ struct ContentView: View {
                                 .background(.white.opacity(0.2), in: Capsule())
                             }
                         }
-                        
                         Spacer()
                     }
                     .padding(.top, 60)
-                    
                     Spacer()
                 }
                 
-                // MARK: - UI
+                // MARK: - Rep UI
                 RepCounterView(
                     repCount: viewModel.repCount,
                     exerciseType: viewModel.selectedExercise,
@@ -91,6 +89,9 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .onAppear {
+            viewModel.modelContext = modelContext
+        }
         .sheet(isPresented: $showExerciseSelection) {
             ExerciseSelectionView(
                 selectedExercise: $viewModel.selectedExercise,
@@ -102,4 +103,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .modelContainer(for: WorkoutRecord.self, inMemory: true)
 }

@@ -8,6 +8,7 @@ import Foundation
 import Combine
 import AVFoundation
 import Vision
+import SwiftData
 
 @MainActor
 final class WorkoutViewModel: ObservableObject {
@@ -25,14 +26,14 @@ final class WorkoutViewModel: ObservableObject {
     var repCount: Int { currentSession?.repCount ?? 0 }
     var formattedTime: String { currentSession?.formattedDuration ?? "00:00" }
     
-    // MARK: - Private
+    // MARK: - Dependencies
     private let cameraService: CameraService
     private let poseService: PoseDetectionService
+    var modelContext: ModelContext?
+    
+    // MARK: - Private
     private var cancellables = Set<AnyCancellable>()
     private var timerCancellable: AnyCancellable?
-    
-    // Rep sayma için durum
-    private var lastAngle: Double?
     private var repState: RepState = .idle
     
     // MARK: - Init
@@ -70,7 +71,6 @@ final class WorkoutViewModel: ObservableObject {
                 guard let self else { return }
                 self.currentPose = pose
                 self.updateSkeletonPoints(from: pose)
-                
                 if self.isWorkoutActive, let pose {
                     self.analyzeMovement(pose)
                 }
@@ -78,78 +78,58 @@ final class WorkoutViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    // MARK: - Skeleton Points
+    // MARK: - Skeleton
     private func updateSkeletonPoints(from pose: DetectedPose?) {
-        guard let pose else {
-            skeletonPoints = [:]
-            return
-        }
+        guard let pose else { skeletonPoints = [:]; return }
         skeletonPoints = pose.joints.mapValues { $0.point }
     }
     
     // MARK: - Hareket Analizi
     private func analyzeMovement(_ pose: DetectedPose) {
         switch selectedExercise {
-        case .squat:   analyzeSquat(pose)
-        case .pushUp:  analyzePushUp(pose)
-        case .sitUp:   analyzeSitUp(pose)
+        case .squat:  analyzeSquat(pose)
+        case .pushUp: analyzePushUp(pose)
+        case .sitUp:  analyzeSitUp(pose)
         }
     }
     
-    // Squat: kalça-diz-ayak bileği açısı
     private func analyzeSquat(_ pose: DetectedPose) {
         guard let angle = pose.angle(
-            first: .leftHip,
-            middle: .leftKnee,
-            last: .leftAnkle
+            first: .leftHip, middle: .leftKnee, last: .leftAnkle
         ) else { return }
-        
         detectRep(angle: angle, downThreshold: 90, upThreshold: 160)
     }
     
-    // Push-up: omuz-dirsek-bilek açısı
     private func analyzePushUp(_ pose: DetectedPose) {
         guard let angle = pose.angle(
-            first: .leftShoulder,
-            middle: .leftElbow,
-            last: .leftWrist
+            first: .leftShoulder, middle: .leftElbow, last: .leftWrist
         ) else { return }
-        
         detectRep(angle: angle, downThreshold: 90, upThreshold: 160)
     }
     
-    // Sit-up: omuz-kalça-diz açısı
     private func analyzeSitUp(_ pose: DetectedPose) {
         guard let angle = pose.angle(
-            first: .leftShoulder,
-            middle: .leftHip,
-            last: .leftKnee
+            first: .leftShoulder, middle: .leftHip, last: .leftKnee
         ) else { return }
-        
         detectRep(angle: angle, downThreshold: 60, upThreshold: 120)
     }
     
-    // MARK: - Rep Tespiti (aşağı → yukarı = 1 tekrar)
+    // MARK: - Rep Tespiti
     private func detectRep(angle: Double, downThreshold: Double, upThreshold: Double) {
         switch repState {
         case .idle:
-            if angle < downThreshold {
-                repState = .down
-            }
+            if angle < downThreshold { repState = .down }
         case .down:
             if angle > upThreshold {
                 repState = .idle
                 let confidence = calculateConfidence(angle: angle, threshold: upThreshold)
-                Task { @MainActor in
-                    self.addRep(confidence: confidence)
-                }
+                Task { @MainActor in self.addRep(confidence: confidence) }
             }
         }
     }
     
     private func calculateConfidence(angle: Double, threshold: Double) -> Double {
-        let extra = angle - threshold
-        return min(1.0, max(0.5, extra / 40.0))
+        min(1.0, max(0.5, (angle - threshold) / 40.0))
     }
     
     // MARK: - Workout Controls
@@ -166,6 +146,7 @@ final class WorkoutViewModel: ObservableObject {
         isWorkoutActive = false
         cameraService.stop()
         stopTimer()
+        saveSession()
     }
     
     func resetWorkout() {
@@ -179,6 +160,24 @@ final class WorkoutViewModel: ObservableObject {
     
     func addRep(confidence: Double = 1.0) {
         currentSession?.addRep(confidence: confidence)
+    }
+    
+    // MARK: - SwiftData Kayıt
+    private func saveSession() {
+        guard
+            let session = currentSession,
+            session.repCount > 0,
+            let context = modelContext
+        else { return }
+        
+        let record = WorkoutRecord(from: session)
+        context.insert(record)
+        
+        do {
+            try context.save()
+        } catch {
+            errorMessage = "Kayıt sırasında hata oluştu."
+        }
     }
     
     // MARK: - Timer

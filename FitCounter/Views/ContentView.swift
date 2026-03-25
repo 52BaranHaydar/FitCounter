@@ -40,7 +40,8 @@ struct ContentView: View {
                     isActive: viewModel.isWorkoutActive,
                     onStart: { viewModel.startWorkout() },
                     onStop: { viewModel.stopWorkout() },
-                    onReset: { viewModel.resetWorkout() }
+                    onReset: { viewModel.resetWorkout() },
+                    onAddRep: { viewModel.addRep(confidence: 1.0) }  
                 )
                 
                 // MARK: - Hata

@@ -4,7 +4,6 @@
 //
 //  Created by Baran on 25.03.2026.
 //
-
 import SwiftUI
 
 struct RepCounterView: View {
@@ -16,6 +15,7 @@ struct RepCounterView: View {
     let onStart: () -> Void
     let onStop: () -> Void
     let onReset: () -> Void
+    var onAddRep: () -> Void = {}
     
     var body: some View {
         VStack(spacing: 0) {
@@ -52,6 +52,21 @@ struct RepCounterView: View {
                 .padding(.top, 12)
             
             Spacer()
+            
+            // MARK: - Debug butonu
+            #if DEBUG
+            if isActive {
+                Button(action: onAddRep) {
+                    Label("Manuel Rep", systemImage: "plus.circle")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(.white.opacity(0.7))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(.white.opacity(0.15), in: RoundedRectangle(cornerRadius: 10))
+                }
+                .padding(.bottom, 8)
+            }
+            #endif
             
             // MARK: - Butonlar
             HStack(spacing: 16) {
@@ -90,7 +105,7 @@ struct RepCounterView: View {
     }
 }
 
-// MARK: - Preview
+// MARK: - Previews
 #Preview("Aktif değil") {
     ZStack {
         Color.black.ignoresSafeArea()
@@ -117,7 +132,8 @@ struct RepCounterView: View {
             isActive: true,
             onStart: {},
             onStop: {},
-            onReset: {}
+            onReset: {},
+            onAddRep: { print("Rep eklendi") }
         )
     }
     .preferredColorScheme(.dark)

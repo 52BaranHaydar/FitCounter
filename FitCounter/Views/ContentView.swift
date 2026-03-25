@@ -9,6 +9,7 @@ import SwiftUI
 struct ContentView: View {
     
     @StateObject private var viewModel = WorkoutViewModel()
+    @State private var showExerciseSelection = false
     
     var body: some View {
         GeometryReader { geo in
@@ -32,6 +33,37 @@ struct ContentView: View {
                 )
                 .ignoresSafeArea()
                 
+                // MARK: - Üst bar
+                VStack {
+                    HStack {
+                        Spacer()
+                        
+                        // Egzersiz seçim butonu (antrenman aktif değilse)
+                        if !viewModel.isWorkoutActive {
+                            Button {
+                                showExerciseSelection = true
+                            } label: {
+                                HStack(spacing: 6) {
+                                    Image(systemName: viewModel.selectedExercise.icon)
+                                    Text(viewModel.selectedExercise.rawValue)
+                                    Image(systemName: "chevron.up")
+                                        .font(.system(size: 11))
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(.white.opacity(0.2), in: Capsule())
+                            }
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.top, 60)
+                    
+                    Spacer()
+                }
+                
                 // MARK: - UI
                 RepCounterView(
                     repCount: viewModel.repCount,
@@ -41,7 +73,7 @@ struct ContentView: View {
                     onStart: { viewModel.startWorkout() },
                     onStop: { viewModel.stopWorkout() },
                     onReset: { viewModel.resetWorkout() },
-                    onAddRep: { viewModel.addRep(confidence: 1.0) }  
+                    onAddRep: { viewModel.addRep(confidence: 1.0) }
                 )
                 
                 // MARK: - Hata
@@ -59,6 +91,12 @@ struct ContentView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $showExerciseSelection) {
+            ExerciseSelectionView(
+                selectedExercise: $viewModel.selectedExercise,
+                isPresented: $showExerciseSelection
+            )
+        }
     }
 }
 

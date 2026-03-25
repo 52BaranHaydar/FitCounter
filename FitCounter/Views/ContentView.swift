@@ -11,6 +11,7 @@ struct ContentView: View {
     
     @StateObject private var viewModel = WorkoutViewModel()
     @State private var showExerciseSelection = false
+    @State private var showHistory = false
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
@@ -38,7 +39,21 @@ struct ContentView: View {
                 // MARK: - Üst bar
                 VStack {
                     HStack {
+                        // Geçmiş butonu
+                        Button {
+                            showHistory = true
+                        } label: {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 18))
+                                .foregroundStyle(.white)
+                                .padding(10)
+                                .background(.white.opacity(0.2), in: Circle())
+                        }
+                        .padding(.leading, 20)
+                        
                         Spacer()
+                        
+                        // Egzersiz seçim butonu
                         if !viewModel.isWorkoutActive {
                             Button {
                                 showExerciseSelection = true
@@ -56,9 +71,16 @@ struct ContentView: View {
                                 .background(.white.opacity(0.2), in: Capsule())
                             }
                         }
+                        
                         Spacer()
+                        
+                        // Sağ taraf denge
+                        Color.clear
+                            .frame(width: 48, height: 48)
+                            .padding(.trailing, 20)
                     }
                     .padding(.top, 60)
+                    
                     Spacer()
                 }
                 
@@ -98,9 +120,13 @@ struct ContentView: View {
                 isPresented: $showExerciseSelection
             )
         }
+        .sheet(isPresented: $showHistory) {
+            HistoryView()
+        }
     }
 }
 
+// MARK: - Preview
 #Preview {
     ContentView()
         .modelContainer(for: WorkoutRecord.self, inMemory: true)
